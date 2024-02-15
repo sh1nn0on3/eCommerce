@@ -1,26 +1,24 @@
-"use strict";
-// Key !dmbg install by MongoDB Snippets
-
-const { model, Schema, Types } = require("mongoose");
+"use stract";
+const mongoose = require("mongoose");
 
 const DOCUMENT_NAME = "Shop";
 const COLLECTION_NAME = "Shops";
 
-const shopSchema = new Schema(
+const shopSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      trim: true, // remove whitespace
-      maxLength: 100,
+      trim: true,
+      maxlength: 100,
     },
     email: {
-      type: String,
       unique: true,
+      type: String,
       trim: true,
     },
     password: {
       type: String,
-      required: true,
+      trim: true,
     },
     status: {
       type: String,
@@ -28,7 +26,7 @@ const shopSchema = new Schema(
       default: "inactive",
     },
     verify: {
-      type: Schema.Types.Boolean,
+      type: Boolean,
       default: false,
     },
     roles: {
@@ -36,7 +34,10 @@ const shopSchema = new Schema(
       default: [],
     },
   },
-  { timestamps: true, collation: COLLECTION_NAME }
+  {
+    timestamps: true,
+    collection: COLLECTION_NAME,
+  }
 );
 
-module.exports = model(DOCUMENT_NAME, shopSchema, COLLECTION_NAME);
+module.exports = mongoose.model(DOCUMENT_NAME, shopSchema);
