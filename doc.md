@@ -10,3 +10,4 @@ process --
 dotenv --
 bcrypt -- 
 crypto -- encode two (symmetric-key encryption )
+lodash --

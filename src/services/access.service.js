@@ -35,9 +35,19 @@ class AccessService {
       });
       // Step 4 : Return the user pub/pri key
       if (newShop) {
+        // Step 4.1: Generate key pair
         const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
           modulusLength: 4096,
+          publicKeyEncoding: {
+            type: "spki",
+            format: "pem",
+          },
+          privateKeyEncoding: {
+            type: "pkcs8",
+            format: "pem",
+          },
         });
+        // Step 4.2: Save the public key
         const publicKeyString = await KeyTokenService.createKeyToken({
           userId: newShop._id,
           publicKey,
@@ -48,11 +58,14 @@ class AccessService {
             message: "Error while creating public key",
           };
         }
+        // Step 4.3: Create token pair
+        const publicKeyObject = crypto.createPublicKey(publicKeyString);
         const tokens = await createTokenPair(
           { userId: newShop._id, email: newShop.email },
-          publicKey,
+          publicKeyObject,
           privateKey
         );
+        // console.log(`Create token pair:: `, tokens);
         return {
           code: 2001,
           metadata: {

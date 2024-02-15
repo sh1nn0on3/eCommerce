@@ -10,7 +10,7 @@ class KeyTokenService {
         user: userId,
         publicKey: publicKeyString,
       });
-      return newKeyToken ? publicKeyString : null;
+      return newKeyToken ? newKeyToken.publicKey : null;
     } catch (error) {
       return {
         code: "xxxx",
