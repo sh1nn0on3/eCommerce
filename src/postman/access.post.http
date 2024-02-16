@@ -11,13 +11,3 @@ x-api-key: 1234
     "password" : "123456"
 }
 
-###
-POST {{url_dev}}/signupdadasda
-Content-Type: application/json
-x-api-key: 1234
-
-{
-    "name" : "Shop Test",
-    "email" : "test5@gmail.com",
-    "password" : "123456"
-}

@@ -25,9 +25,9 @@ const ReasonStatus = {
 
 // ErrorResponse
 class ErrorResponse extends Error {
-  constructor(message, statusCode) {
+  constructor(message, status) {
     super(message);
-    this.statusCode = statusCode;
+    this.status = status;
   }
 }
 
