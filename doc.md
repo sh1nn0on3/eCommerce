@@ -10,4 +10,4 @@ process --
 dotenv --
 bcrypt -- 
 crypto -- encode two (symmetric-key encryption )
-lodash --
+lodash -- pick (object , fileds)
