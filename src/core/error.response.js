@@ -2,8 +2,6 @@
 
 // Status Codes
 const StatusCode = {
-  OK: 200,
-  CREATED: 201,
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
@@ -13,8 +11,6 @@ const StatusCode = {
 };
 // Reason Status
 const ReasonStatus = {
-  OK: "OK",
-  CREATED: "Created",
   BAD_REQUEST: "Bad Request",
   UNAUTHORIZED: "Unauthorized",
   FORBIDDEN: "Forbidden",
