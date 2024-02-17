@@ -1,4 +1,4 @@
-"use stract";
+"use strict";
 const { model, Schema, Types } = require("mongoose");
 
 const DOCUMENT_NAME = "KeyToken";
@@ -19,9 +19,13 @@ const keyTokenSchema = new Schema(
       type: String,
       required: true,
     },
-    refreshToken: {
+    refreshTokenUsed: {
       type: Array,
       default: [],
+    },
+    refreshToken: {
+      type: String,
+      required: true,
     },
   },
   {

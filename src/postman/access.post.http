@@ -6,8 +6,9 @@ Content-Type: application/json
 x-api-key: 1234
 
 {
-    "name" : "Shop Test",
-    "email" : "test09@gmail.com",
+    "email" : "test1006@gmail.com",
     "password" : "123456"
 }
 
+
+### Login

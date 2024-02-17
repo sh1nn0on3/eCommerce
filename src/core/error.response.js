@@ -1,23 +1,6 @@
 "use stract";
 
-// Status Codes
-const StatusCode = {
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  CONFLICT: 409,
-  INTERNAL_SERVER_ERROR: 500,
-};
-// Reason Status
-const ReasonStatus = {
-  BAD_REQUEST: "Bad Request",
-  UNAUTHORIZED: "Unauthorized",
-  FORBIDDEN: "Forbidden",
-  NOT_FOUND: "Not Found",
-  CONFLICT: "Conflict",
-  INTERNAL_SERVER_ERROR: "Internal Server Error",
-};
+const { StatusCode, ReasonStatus } = require("../utils/httpStatus");
 
 // ErrorResponse
 class ErrorResponse extends Error {
@@ -36,7 +19,6 @@ class ConflitError extends ErrorResponse {
     super(message, statusCode);
   }
 }
-
 class BadRequestError extends ErrorResponse {
   constructor(
     message = ReasonStatus.BAD_REQUEST,
@@ -46,7 +28,17 @@ class BadRequestError extends ErrorResponse {
   }
 }
 
+class AuthFailureError extends ErrorResponse {
+  constructor(
+    message = ReasonStatus.UNAUTHORIZED,
+    statusCode = StatusCode.UNAUTHORIZED
+  ) {
+    super(message, statusCode);
+  }
+}
+
 module.exports = {
   ConflitError,
   BadRequestError,
+  AuthFailureError,
 };

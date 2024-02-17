@@ -6,7 +6,8 @@ const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
 const { createTokenPair } = require("../auth/authUtils");
 const { getIntoData } = require("../utils/lodash");
-const { BadRequestError } = require("../core/error.response");
+const { BadRequestError, AuthFailureError } = require("../core/error.response");
+const { findByEmail } = require("./shop.service");
 
 const RoleShop = {
   SHOP: "0001",
@@ -16,6 +17,50 @@ const RoleShop = {
 };
 
 class AccessService {
+  static logout = async (data) => {
+    const delKey = await KeyTokenService.deleteKeyToken(data._id);
+    return {
+      code: 2002,
+      message: "Logout successfully",
+    };
+  };
+
+  static login = async ({ email, password, refreshToken = null }) => {
+    // Step 1
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) throw new BadRequestError("Email not found");
+
+    // Step 2
+    const isMatch = await bcrypt.compare(password, foundShop.password);
+    if (!isMatch) throw new AuthFailureError("Authentication failed");
+
+    // Step 3
+    const privateKey = await crypto.randomBytes(64).toString("hex");
+    const publicKey = await crypto.randomBytes(64).toString("hex");
+    const tokens = await createTokenPair(
+      { userId: foundShop._id, email: foundShop.email },
+      publicKey,
+      privateKey
+    );
+    await KeyTokenService.createKeyToken({
+      userId: foundShop._id,
+      privateKey,
+      publicKey,
+      refreshToken: tokens.refreshToken,
+    });
+
+    // Step 4 : set cookies for refresh token
+
+    return {
+      code: 2000,
+      shop: getIntoData({
+        fileds: ["_id", "name", "email", "status", "verify", "roles"],
+        object: foundShop,
+      }),
+      tokens,
+    };
+  };
+
   static signUp = async ({ name, email, password }) => {
     console.log(`AccessService::signUp:: `, { name, email, password });
     // Step 1: Create a new user
