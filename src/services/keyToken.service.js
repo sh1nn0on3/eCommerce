@@ -48,7 +48,6 @@ class KeyTokenService {
   };
 
   static deleteKeyToken = async (id) => {
-    console.log("🚀 ~ KeyTokenService ~ staticdeleteKeyToken ~ id:", id);
     return await keyTokenModel.findByIdAndDelete(id);
   };
 }
