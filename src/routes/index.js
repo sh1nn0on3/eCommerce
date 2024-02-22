@@ -7,6 +7,9 @@ const router = express.Router();
 const accessRoutes = require("./access");
 const productRoutes = require("./product");
 
+
+
+
 // Check apiKey
 router.use(apiKey);
 // Check permissions

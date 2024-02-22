@@ -21,6 +21,9 @@ require("./dbs/init.mongodb");
 const { countConnect, checkOverLoad } = require("./helpers/check.connect");
 // checkOverLoad();
 
+// Document Api
+const { swaggerSpec, swaggerUi } = require("./swagger");
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Init routes
 app.use("/", require("./routes"));
 

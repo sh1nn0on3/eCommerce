@@ -1,5 +1,18 @@
 version: "3.1"
 services:
+  ecommerce:
+    image: ecommerce
+    container_name: ecommerce
+    working_dir: /server
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "4000:3000"
+    depends_on:
+      - mongo
+    networks:
+      - networkName
   mongo:
     image: mongo:3.6
     container_name: mongoo
@@ -7,3 +20,11 @@ services:
       - "27018:27017"
     volumes:
       - ./data:/data/db
+    networks:
+      - networkName
+
+networks:
+  networkName:
+
+volumes:
+  data:

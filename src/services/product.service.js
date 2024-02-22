@@ -1,6 +1,6 @@
 "use strict";
 
-const { product, clothing, electronic } = require("../models/product.model");
+const { product, clothing, electronic, furniture } = require("../models/product.model");
 const { BadRequestError } = require("../core/error.response");
 
 class ProductFacory {
@@ -40,8 +40,8 @@ class Product {
     this.product_attributes = product_attributes;
   }
 
-  async createProduct() {
-    return await product.create(this);
+  async createProduct(product_id) {
+    return await product.create({ ...this, _id: product_id });
   }
 }
 
@@ -56,7 +56,7 @@ class Clothing extends Product {
     if (!newClothing)
       throw new BadRequestError("Create new Clothing not created");
 
-    const newProduct = await super.createProduct();
+    const newProduct = await super.createProduct(newClothing._id);
     if (!newProduct)
       throw new BadRequestError("Create new Product not created");
 
@@ -74,7 +74,24 @@ class Electronic extends Product {
     if (!newElectronic)
       throw new BadRequestError("Create new Electronic not created");
 
-    const newProduct = await super.createProduct();
+    const newProduct = await super.createProduct(newElectronic._id);
+    if (!newProduct)
+      throw new BadRequestError("Create new Product not created");
+
+    return newProduct;
+  }
+}
+
+class Furniture extends Product {
+  async newFurniture() {
+    const newFurniture = await furniture.create({
+      ...this.product_attributes,
+      product_shop: this.product_shop,
+    });
+    if (!newFurniture)
+      throw new BadRequestError("Create new Furniture not created");
+
+    const newProduct = await super.createProduct(newFurniture._id);
     if (!newProduct)
       throw new BadRequestError("Create new Product not created");
 

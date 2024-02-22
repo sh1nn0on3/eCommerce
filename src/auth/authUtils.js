@@ -41,7 +41,6 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
 };
 
 const authentication = asyncHandler(async (req, res, next) => {
-
   const user = req.headers[HEADER.CLIENT_ID];
   if (!user) return res.status(403).json({ message: "Forbidden Error 1" });
   const keyToken = await findByUserId({ user });
@@ -56,6 +55,7 @@ const authentication = asyncHandler(async (req, res, next) => {
     if (user !== decode.userId)
       return res.status(403).json({ message: "Forbidden Error 4" });
     req.keyToken = keyToken;
+    req.user = decode;
     return next();
   } catch (error) {
     throw new BadRequestError("Unauthorized 5");
