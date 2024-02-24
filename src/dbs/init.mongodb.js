@@ -7,6 +7,7 @@ const {
 const { countConnect } = require("../helpers/check.connect");
 
 const mongooseUrl = `mongodb://${host}:${port}/${name}`;
+// const mongooseUrl = `mongodb://172.17.0.2:27017`;
 
 class Database {
   constructor() {
