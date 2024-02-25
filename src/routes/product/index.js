@@ -12,10 +12,12 @@ router.use(authentication);
 
 // Create product
 router.post("/create", asyncHandler(productController.createProduct));
-router.put("/publish/:id",asyncHandler(productController.publishProductByShop)
-);
-router.put("/unpublish/:id",asyncHandler(productController.unPublishProductByShop)
-);
+router.put("/publish/:id",asyncHandler(productController.publishProductByShop));
+router.put("/unpublish/:id",asyncHandler(productController.unPublishProductByShop));
+
+// UPDATE //
+router.patch("/update/:id",asyncHandler(productController.updateProduct));
+
 // QUERY //
 router.get("/all",asyncHandler(productController.findAllProducts));
 router.get("/drafts/all", asyncHandler(productController.getAllDraftProducts));
