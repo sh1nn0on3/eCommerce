@@ -2,7 +2,7 @@
 
 const { min } = require("lodash");
 const { Schema, model } = require("mongoose");
-
+const slugify = require("slugify");
 const DOCUMENT_NAME = "Product";
 const COLLECTION_NAME = "Products";
 
@@ -11,7 +11,7 @@ const productSchema = new Schema(
     product_name: { type: String, required: true },
     product_thumb: { type: String, required: true },
     product_description: { type: String, required: true },
-    product_slug: { type: String, required: true },
+    product_slug: String,
     product_price: { type: Number, required: true },
     product_quantity: { type: Number, required: true },
     product_type: {
@@ -26,14 +26,25 @@ const productSchema = new Schema(
       default: 4.5,
       min: [1, "Rating must be above 1.0"],
       max: [5, "Rating must be below 5.0"],
+      set: (val) => Math.round(val * 10) / 10,
     },
     product_variations: { type: Array, default: [] },
+    isDraft: { type: Boolean, default: true, index: true, select: false },
+    isPublished: { type: Boolean, default: false, index: true, select: false },
   },
   {
     timestamps: true,
     collection: COLLECTION_NAME,
   }
 );
+// Create index for product_name
+productSchema.index({ product_name: "text", product_description: "text" });
+// Document middleware
+productSchema.pre("save", function (next) {
+  this.product_slug = slugify(this.product_name, { lower: true });
+  next();
+});
+
 // define the product type = Electronics
 const electronicSchema = new Schema(
   {

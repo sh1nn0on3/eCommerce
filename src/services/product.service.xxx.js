@@ -7,6 +7,15 @@ const {
   furniture,
 } = require("../models/product.model");
 const { BadRequestError } = require("../core/error.response");
+const {
+  findAllDraftsForShop,
+  publishProductByShop,
+  findAllPublishedForShop,
+  unPublishProductByShop,
+  searchProducts,
+  findProductById,
+  findAllProducts,
+} = require("../models/repositories/product.repo");
 
 class ProductFacory {
   static productRegistry = {};
@@ -14,11 +23,51 @@ class ProductFacory {
   static registerProduct(type, Product) {
     ProductFacory.productRegistry[type] = Product;
   }
-
   static async createProduct(type, payload) {
     const Product = ProductFacory.productRegistry[type];
     if (!Product) throw new BadRequestError(`Invalid product type ${type}`);
     return new Product(payload).createProduct();
+  }
+
+  static async searchProducts({ keySearch }) {
+    return await searchProducts({ keySearch });
+  }
+
+  static async publishProductByShop({ product_id, product_shop }) {
+    return await publishProductByShop({ product_id, product_shop });
+  }
+
+  static async unPublishProductByShop({ product_id, product_shop }) {
+    return await unPublishProductByShop({ product_id, product_shop });
+  }
+
+  static async findAllDraftsForShop({ product_shop, limit = 50, skip = 0 }) {
+    const query = { product_shop, isDraft: true };
+    return await findAllDraftsForShop({ query, limit, skip });
+  }
+
+  static async findAllPublishedForShop({ product_shop, limit = 50, skip = 0 }) {
+    const query = { product_shop, isPublished: true };
+    return await findAllPublishedForShop({ query, limit, skip });
+  }
+
+  static async findProductById({ product_id }) {
+    return await findProductById({ product_id, unSelect: ["__v"] });
+  }
+
+  static async findAllProducts({
+    limit = 50,
+    sort = "ctime",
+    page = 1,
+    filter = { isPublished: true },
+  }) {
+    return await findAllProducts({
+      limit,
+      sort,
+      filter,
+      page,
+      select: ["product_name", "product_price", "product_thumb"],
+    });
   }
 }
 
