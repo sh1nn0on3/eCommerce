@@ -17,6 +17,7 @@ const {
   findAllProducts,
   updateProductById,
 } = require("../models/repositories/product.repo");
+const { insertInventory } = require("../models/repositories/inventory.repo");
 
 class ProductFacory {
   static productRegistry = {};
@@ -101,7 +102,15 @@ class Product {
   }
 
   async createProduct(product_id) {
-    return await product.create({ ...this, _id: product_id });
+    const newProduct = await product.create({ ...this, _id: product_id });
+    if (!newProduct)
+      throw new BadRequestError("Create new Product not created");
+    await insertInventory({
+      product_id: newProduct._id,
+      shop_id: this.product_shop,
+      stock: this.product_quantity,
+    });
+    return newProduct;
   }
 
   async updateProduct(product_id, product_shop, payload) {
