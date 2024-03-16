@@ -1,43 +1,28 @@
-"use strict";
-
-const { CREATED, SuccessResponse } = require("../core/success.response");
-const AccessService = require("../services/access.service");
+const accessService = require('../services/access.service')
+const catchAsync = require('../helpers/catch.async')
+const {CREATED, OK} = require("../core/success.response");
 
 class AccessController {
-  login = async (req, res, next) => {
-    const metadata = await AccessService.login(req.body);
-    res.cookie("refreshToken", metadata.tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-    new SuccessResponse({
-      message: "Login successfully",
-      metadata: metadata,
-    }).send(res);
-  };
 
-  signUp = async (req, res, next) => {
-    /*
-            200 OK
-            201 CREATED    
-      */
-    // return res.status(201).json(await AccessService.signUp(req.body));
-    new CREATED({
-      message: "User created",
-      metadata: await AccessService.signUp(req.body),
-    }).send(res);
-  };
+    login = catchAsync(async (req, res) => {
+        OK(res, "Login success", await accessService.singIn(req.body))
+    })
 
-  logout = async (req, res, next) => {
-    res.clearCookie("refreshToken");
-    console.log("🚀 ~ AccessController ~ logout= ~ req:", req.keyToken);
-    const metadata = await AccessService.logout(req.keyToken);
-    new SuccessResponse({
-      message: "Logout successfully",
-      metadata: metadata,
-    }).send(res);
-  };
+    refreshToken = catchAsync(async (req, res) => {
+        OK(res, "Get token success", await accessService.refreshToken({
+            refreshToken: req.refreshToken,
+            user: req.user,
+            keyStore: req.keyStore
+        }))
+    })
+
+    logout = catchAsync(async (req, res) => {
+        OK(res, "Logout success", await accessService.logout(req.keyStore))
+    })
+
+    signUp = catchAsync(async (req, res) => {
+        CREATED(res, "Register success", await accessService.signUp(req.body))
+    })
 }
 
-module.exports = new AccessController();
+module.exports = new AccessController()

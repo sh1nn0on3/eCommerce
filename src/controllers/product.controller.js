@@ -1,95 +1,81 @@
-"use strict";
-
-const { SuccessResponse } = require("../core/success.response");
-const ProductFacoryV2 = require("../services/product.service.xxx");
-// const ProductFacory = require("../services/product.service");
+const {ProductService} = require('../services/product.service')
+const catchAsync = require('../helpers/catch.async')
+const {CREATED, OK} = require("../core/success.response");
 
 class ProductController {
-  // Version 2
-  createProduct = async (req, res, next) => {
-    new SuccessResponse({
-      message: "Product created successfully",
-      metadata: await ProductFacoryV2.createProduct(req.body.product_type, {
-        ...req.body,
-        product_shop: req.user.userId,
-      }),
-    }).send(res);
-  };
 
-  updateProduct = async (req, res, next) => {
-    new SuccessResponse({
-      message: "Product updated successfully",
-      metadata: await ProductFacoryV2.updateProduct(req.body.product_type, {
-        ...req.body,
-        product_shop: req.user.userId,
-        product_id: req.params.id,
-      }),
-    }).send(res);
-  };
+    // create product
+    createProduct = catchAsync(async (req, res) => {
+        CREATED(res, "Create new product success",
+            await ProductService.createProduct(req.body.product_type, {
+                ...req.body,
+                product_shop: req.user.userId
+            }))
+    })
 
-  publishProductByShop = async (req, res, next) => {
-    new SuccessResponse({
-      message: "Product published successfully",
-      metadata: await ProductFacoryV2.publishProductByShop({
-        product_id: req.params.id,
-        product_shop: req.user.userId,
-      }),
-    }).send(res);
-  };
+    // PUT
+    publishProductByShop = catchAsync(async (req, res) => {
+        OK(res, "Update publish product success",
+            await ProductService.publishProductByShop({
+                product_shop: req.user.userId,
+                product_id: req.params.id
+            }))
+    })
 
-  unPublishProductByShop = async (req, res, next) => {
-    new SuccessResponse({
-      message: "Product published successfully",
-      metadata: await ProductFacoryV2.unPublishProductByShop({
-        product_id: req.params.id,
-        product_shop: req.user.userId,
-      }),
-    }).send(res);
-  };
+    updateProduct = catchAsync(async (req, res) => {
+        OK(res, "Update product success",
+            await ProductService.updateProduct(req.body.product_type, req.params.productId, {
+                ...req.body,
+                product_shop: req.user.userId
+            }))
+    })
 
-  searchProducts = async (req, res, next) => {
-    new SuccessResponse({
-      message: "All publish products",
-      metadata: await ProductFacoryV2.searchProducts({
-        keySearch: req.params.keySearch,
-      }),
-    }).send(res);
-  };
+    /**
+     * @desc Get all Drafts for shop
+     * @param {Number} limit
+     * @param {Number} skip
+     * @return { JSON }
+     */
+    getAllDraftsForShop = catchAsync(async (req, res) => {
+        OK(res, "Find list drafts success",
+            await ProductService.findAllDraftsForShop({
+               product_shop: req.user.userId
+            }))
+    })
 
-  // QUERY
-  getAllDraftProducts = async (req, res, next) => {
-    new SuccessResponse({
-      message: "All draft products",
-      metadata: await ProductFacoryV2.findAllDraftsForShop({
-        product_shop: req.user.userId,
-      }),
-    }).send(res);
-  };
+    /**
+     * @desc Get all Published for shop
+     * @param {Number} limit
+     * @param {Number} skip
+     * @return { JSON }
+     */
+    getAllPublishedForShop = catchAsync(async (req, res) => {
+        OK(res, "Find list published success",
+            await ProductService.findAllPublishForShop({
+                product_shop: req.user.userId
+            }))
+    })
 
-  getAllPublishedProducts = async (req, res, next) => {
-    new SuccessResponse({
-      message: "All publish products",
-      metadata: await ProductFacoryV2.findAllPublishedForShop({
-        product_shop: req.user.userId,
-      }),
-    }).send(res);
-  };
+    searchProducts = catchAsync(async (req, res) => {
+        OK(res, "Search product success",
+            await ProductService.searchProducts(req.params))
+    })
 
-  findAllProducts = async (req, res, next) => {
-    new SuccessResponse({
-      message: "Get list find all products successfully",
-      metadata: await ProductFacoryV2.findAllProducts(req.query),
-    }).send(res);
-  };
+    findAllProducts = catchAsync(async (req, res) => {
+        OK(res, "find all product success",
+            await ProductService.findAllProducts(req.params))
+    })
 
-  findProduct = async (req, res, next) => {
-    new SuccessResponse({
-      message: "Get product successfully",
-      metadata: await ProductFacoryV2.findProductById({
-        product_id: req.params.id,
-      }),
-    }).send(res);
-  };
+    findProduct = catchAsync(async (req, res) => {
+        OK(res, "find product success",
+            await ProductService.findOneProduct(req.params.product_id))
+    })
+
+    advancedSearch = catchAsync(async (req, res) => {
+        OK(res, "advanced search product success",
+            await ProductService.advancedSearch(req.params.query))
+    })
+
 }
 
-module.exports = new ProductController();
+module.exports = new ProductController()

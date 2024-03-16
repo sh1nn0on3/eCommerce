@@ -1,68 +1,153 @@
-"use strict";
-
-const JWT = require("jsonwebtoken");
-const { asyncHandler } = require("../helpers/asyncHandler");
-const { BadRequestError } = require("../core/error.response");
-const { findByUserId } = require("../services/keyToken.service");
+const JWT = require('jsonwebtoken')
+const catchAsync = require('../helpers/catch.async')
+const {Api403Error, Api404Error, Api401Error} = require("../core/error.response");
+const KeyTokenService = require('../services/keyToken.service')
+const {ignoreWhiteList} = require('./checkAuth')
 
 const HEADER = {
-  API_KEY: "x-api-key",
-  CLIENT_ID: "x-client-id",
-  AUTHORIZATION: "athorization",
-};
+    API_KEY: 'x-api-key',
+    AUTHORIZATION: 'authorization',
+    REFRESH_TOKEN: 'refresh-token',
+    X_CLIENT_ID: 'x-client-id',
+    BEARER: 'Bearer '
+}
 
 const createTokenPair = async (payload, publicKey, privateKey) => {
-  try {
-    // Access token
-    const accessToken = JWT.sign(payload, publicKey, {
-      expiresIn: "2d",
-    });
+    try {
+        // auth token
+        const accessToken = await JWT.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: '1 days'
+        })
 
-    const refreshToken = JWT.sign(payload, privateKey, {
-      expiresIn: "7d",
-    });
+        // refresh token
+        const refreshToken = await JWT.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: '2 days'
+        })
 
-    JWT.verify(accessToken, publicKey, (err, decode) => {
-      if (err) throw new Error("Invalid token");
-      console.log(`Decode verify:: `, decode);
-    });
+        // verify key
+        verifyJwt(accessToken, publicKey, (err, decode) => {
+            if (err) {
+                console.error(`error verify:: `, err)
+            } else {
+                console.log('decode verify::', decode)
+            }
+        })
 
-    return {
-      accessToken,
-      refreshToken,
-    };
-  } catch (error) {
-    return {
-      code: "xxxx",
-      message: "Error while creating token pair",
-      status: "error",
-    };
-  }
-};
+        return {
+            accessToken,
+            refreshToken
+        }
+    } catch (error) {
+        console.error(`createTokenPair error:: `, error)
+    }
+}
+/**
+ * 1. Check userId missing
+ * 2. Get accessToken
+ * 3. verifyToken
+ * 4. Check user in dbs
+ * 5. check key store with this userId
+ * 6. OK all => return next()
+ * @type {(function(*, *, *): void)|*}
+ */
+const authentication = catchAsync(async (req, res, next) => {
+    if (ignoreWhiteList(req)) return next()
 
-const authentication = asyncHandler(async (req, res, next) => {
-  const user = req.headers[HEADER.CLIENT_ID];
-  if (!user) return res.status(403).json({ message: "Forbidden Error 1" });
-  const keyToken = await findByUserId({ user });
-  if (!keyToken) return res.status(403).json({ message: "Forbidden Error 2" });
+    // 1. get auth token
+    const clientId = req.headers[HEADER.X_CLIENT_ID]
+    const accessToken = extractToken(req.headers[HEADER.AUTHORIZATION])
+    if (!accessToken) throw new Api401Error('Invalid request')
 
-  const accessToken = req.headers[HEADER.AUTHORIZATION];
-  if (!accessToken)
-    return res.status(403).json({ message: "Forbidden Error 3" });
+    // 2. check user id
+    const obj = parseJwt(accessToken)
+    if (!obj.userId) throw new Api403Error('Invalid request')
 
-  try {
-    const decode = JWT.verify(accessToken, keyToken.publicKey);
-    if (user !== decode.userId)
-      return res.status(403).json({ message: "Forbidden Error 4" });
-    req.keyToken = keyToken;
-    req.user = decode;
-    return next();
-  } catch (error) {
-    throw new BadRequestError("Unauthorized 5");
-  }
-});
+    // 2. check keyStore by userId
+    const userId = clientId || obj.userId
+    const keyStore = await KeyTokenService.findByUserId(userId)
+    if (!keyStore) throw new Api404Error('Resource not found')
+
+    // 4.
+    try {
+        const decodeUser = verifyJwt(accessToken, keyStore.publicKey);
+        if (userId !== decodeUser.userId) throw new Api401Error('Invalid userId')
+
+        req.keyStore = keyStore
+        next()
+    } catch (error) {
+        throw error
+    }
+})
+
+const parseJwt = (token) => {
+    return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+}
+
+const authenticationV2 = catchAsync(async (req, res, next) => {
+    if (ignoreWhiteList(req)) return next()
+
+    const clientId = req.headers[HEADER.X_CLIENT_ID]
+    const refreshToken = extractToken(req.headers[HEADER.REFRESH_TOKEN])
+    const accessToken = extractToken(req.headers[HEADER.AUTHORIZATION])
+
+    // 1. check user id
+    const obj = parseJwt(accessToken || refreshToken)
+    if (!obj.userId) throw new Api403Error('Invalid request')
+
+    // 2. check user id
+    const userId = clientId || obj.userId
+    if (!userId) throw new Api403Error('Invalid request')
+
+    // 2. check keyStore by userId
+    const keyStore = await KeyTokenService.findByUserId(userId)
+    if (!keyStore) throw new Api404Error('Resource not found')
+
+    // 3. get refreshToken
+    if (refreshToken) {
+        try {
+            const decodeUser = verifyJwt(refreshToken, keyStore.privateKey);
+            if (userId !== decodeUser.userId) throw new Api401Error('Invalid userId')
+
+            req.user = decodeUser
+            req.keyStore = keyStore
+            req.refreshToken = refreshToken
+
+            return next()
+        }  catch (error) {
+            throw error
+        }
+    }
+
+    // 3. get auth token
+    if (!accessToken) throw new Api401Error('Invalid request')
+
+    // 4.
+    try {
+        const decodeUser = verifyJwt(accessToken, keyStore.publicKey);
+        if (userId !== decodeUser.userId) throw new Api401Error('Invalid userId')
+
+        req.user = decodeUser
+        req.keyStore = keyStore
+        return next()
+    } catch (error) {
+        throw error
+    }
+})
+
+const verifyJwt = (token, keySecret) => {
+    return JWT.verify(token, keySecret);
+}
+
+const extractToken = (tokenHeader) => {
+    if (!tokenHeader) return "";
+    return tokenHeader.replace(HEADER.BEARER, '')
+}
 
 module.exports = {
-  createTokenPair,
-  authentication,
-};
+    createTokenPair,
+    authentication,
+    authenticationV2,
+    verifyJwt,
+}

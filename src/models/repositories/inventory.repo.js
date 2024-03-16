@@ -1,21 +1,17 @@
-const inventory = require("../../models/inventory.model");
+const inventoryModel = require('../inventory.model')
+const {Types} = require('mongoose')
 
 const insertInventory = async ({
-  product_id,
-  shop_id,
-  stock,
-  location = "unknow",
+    productId, shopId, stock, location = 'unKnow'
 }) => {
-  const newInventory = await inventory.create({
-    inven_productId: product_id,
-    inven_loactionId: location,
-    inven_stock: stock,
-    inven_shopId: shop_id,
-  });
-  if (!newInventory) return "Create new Inventory not created";
-  return await newInventory.save();
-};
+    return await inventoryModel.create({
+        inventory_product_id: new Types.ObjectId(productId),
+        inventory_location: location,
+        inventory_shop_id: new Types.ObjectId(shopId),
+        inventory_stock: stock,
+    })
+}
 
 module.exports = {
-  insertInventory,
-};
+    insertInventory
+}

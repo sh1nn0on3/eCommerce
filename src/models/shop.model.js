@@ -1,43 +1,44 @@
-"use stract";
-const mongoose = require("mongoose");
+const {Schema, mongoose} = require("mongoose");
 
-const DOCUMENT_NAME = "Shop";
-const COLLECTION_NAME = "Shops";
+const DOCUMENT_NAME = 'Shop';
+const COLLECTION_NAME = 'Shops';
 
-const shopSchema = new mongoose.Schema(
-  {
+const shopSchema = new mongoose.Schema({
     name: {
-      type: String,
-      trim: true,
-      maxlength: 100,
+        type: String,
+        trim: true,
+        maxLength: 150
     },
     email: {
-      unique: true,
-      type: String,
-      trim: true,
+        type: String,
+        unique: true,
+        trim: true
     },
     password: {
-      type: String,
-      trim: true,
+        type: String,
+        required: true
+    },
+    msisdn: {
+        type: String,
+        required: true
     },
     status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "inactive",
+        type: String,
+        enum: ['active', 'inactive'],
+        default: 'inactive'
     },
     verify: {
-      type: Boolean,
-      default: false,
+        type: Schema.Types.Boolean,
+        default: false
     },
     roles: {
-      type: Array,
-      default: [],
-    },
-  },
-  {
+        type: Array,
+        default: []
+    }
+}, {
     timestamps: true,
-    collection: COLLECTION_NAME,
-  }
-);
+    collection: COLLECTION_NAME
+});
 
-module.exports = mongoose.model(DOCUMENT_NAME, shopSchema);
+
+module.exports = mongoose.model(DOCUMENT_NAME, shopSchema)

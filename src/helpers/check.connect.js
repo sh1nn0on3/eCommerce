@@ -1,31 +1,35 @@
-"use strict";
+const mongoose = require('mongoose');
+const os = require('os');
+const process = require('process');
+const SECONDS = 5000;
 
-const mongoose = require("mongoose");
-const os = require("os");
-const process = require("process");
-const _SECOND = 5000;
-
-// Count Connect
+// count connect
 const countConnect = () => {
-  const numConnect = mongoose.connections.length;
-  console.log("Number of connections: ", numConnect);
-  return numConnect;
-};
+    const numOfConnect = mongoose.connections.length;
+    console.log(`Number of connections: ${numOfConnect}`);
+}
 
-// Check overload
-const checkOverLoad = () => {
-  setInterval(() => {
-    const numConnect = mongoose.connections.length;
-    const numCores = os.cpus().length;
-    const memoryUsage = process.memoryUsage().rss / 1024 / 1024;
+// check over load connect
+const checkOverload = () => {
+    setInterval(() => {
+        const numConnection = mongoose.connections.length;
+        const numCores = os.cpus().length;
+        const memoryUse = process.memoryUsage().rss;
+        // server chiu dk 5 connect
+        const maxConnections = numCores * 5;
 
-    console.log("Number of connections: ", numConnect);
-    console.log("Memory usage: ", memoryUsage, "MB");
+        // console.log(`Active connections: ${numConnection}`);
+        // console.log(`Memory usage:: ${memoryUse / 1024 / 1024} MB`);
 
-    if (numConnect > numCores) {
-      console.log("Overload detected");
-    }
-  }, _SECOND); // Monitor every 5 seconds
-};
+        if (numConnection > maxConnections) {
+            console.log(`Connection overload detected!`);
+            // notify.send(....)
+        }
 
-module.exports = { countConnect, checkOverLoad };
+    }, SECONDS);
+}
+
+module.exports = {
+    countConnect,
+    checkOverload
+}

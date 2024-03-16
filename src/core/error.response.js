@@ -1,44 +1,51 @@
-"use stract";
+const { StatusCodes, ReasonPhrases } = require("./httpStatusCode");
 
-const { StatusCode, ReasonStatus } = require("../utils/httpStatus");
-
-// ErrorResponse
-class ErrorResponse extends Error {
-  constructor(message, status) {
-    super(message);
-    this.status = status;
-  }
+class BaseError extends Error {
+    constructor(message, status, errors, isOperational) {
+        super(message)
+        Object.setPrototypeOf(this, new.target.prototype)
+        this.status = status
+        this.errors = errors
+        this.isOperational = isOperational
+        Error.captureStackTrace(this, this.constructor)
+    }
 }
 
-// Custom Errors
-class ConflitError extends ErrorResponse {
-  constructor(
-    message = ReasonStatus.CONFLICT,
-    statusCode = StatusCode.CONFLICT
-  ) {
-    super(message, statusCode);
-  }
-}
-class BadRequestError extends ErrorResponse {
-  constructor(
-    message = ReasonStatus.BAD_REQUEST,
-    statusCode = StatusCode.BAD_REQUEST
-  ) {
-    super(message, statusCode);
-  }
+class Api409Error extends BaseError {
+    constructor(message = ReasonPhrases.CONFLICT, errors = [], status = StatusCodes.CONFLICT, isOperational = true) {
+        super(message, status, errors, isOperational);
+    }
 }
 
-class AuthFailureError extends ErrorResponse {
-  constructor(
-    message = ReasonStatus.UNAUTHORIZED,
-    statusCode = StatusCode.UNAUTHORIZED
-  ) {
-    super(message, statusCode);
-  }
+class Api403Error extends BaseError {
+    constructor(message = ReasonPhrases.FORBIDDEN, errors = [], status = StatusCodes.FORBIDDEN, isOperational = true) {
+        super(message, status, errors, isOperational);
+    }
+}
+
+class Api401Error extends BaseError {
+    constructor(message = ReasonPhrases.UNAUTHORIZED, errors = [], status = StatusCodes.UNAUTHORIZED, isOperational = true) {
+        super(message, status, errors, isOperational);
+    }
+}
+
+class BusinessLogicError extends BaseError {
+    constructor(message = ReasonPhrases.INTERNAL_SERVER_ERROR, errors = [], status = StatusCodes.INTERNAL_SERVER_ERROR, isOperational = true) {
+        super(message, status, errors, isOperational);
+    }
+}
+
+class Api404Error extends BaseError {
+    constructor(message = ReasonPhrases.NOT_FOUND, errors = [], status = StatusCodes.NOT_FOUND, isOperational = true) {
+        super(message, status, errors, isOperational);
+    }
 }
 
 module.exports = {
-  ConflitError,
-  BadRequestError,
-  AuthFailureError,
-};
+    Api401Error,
+    Api403Error,
+    Api404Error,
+    Api409Error,
+    BusinessLogicError,
+    BaseError,
+}

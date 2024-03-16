@@ -1,47 +1,51 @@
-"use strict";
+const { StatusCodes } = require("./httpStatusCode");
 
-const { StatusCode, ReasonStatus } = require("../utils/httpStatus");
-// SuccessResponse
 class SuccessResponse {
-  constructor({
-    message,
-    statusCode = StatusCode.OK,
-    reasonStatus = ReasonStatus.OK,
-    metadata = {},
-  }) {
-    this.message = !message ? reasonStatus : message;
-    this.status = statusCode;
-    this.metadata = metadata;
-  }
 
-  send(res, headers = {}) {
-    return res.status(this.status).json(this);
-  }
+    constructor({message, status = StatusCodes.OK, data = {}, options = {}}) {
+        this.message = message;
+        this.status = status;
+        this.data = data;
+        this.options = options;
+    }
+
+    send(res, headers = {}) {
+        return res.status(this.status)
+            .json(this)
+    }
 }
 
-// Custom Success
-class OK extends SuccessResponse {
-  constructor({ message, metadata }) {
-    super({ message, metadata });
-  }
+class Ok extends SuccessResponse {
+    constructor({message, data = {}, options = {}}) {
+        super({message, data, options})
+    }
 }
 
-class CREATED extends SuccessResponse {
-  constructor({
-    options = {},
-    message,
-    statusCode = StatusCode.CREATED,
-    reasonStatus = ReasonStatus.CREATED,
-    metadata,
-  }) {
-    super({ message, statusCode, reasonStatus, metadata });
-    this.options = options;
-  }
+
+class Create extends SuccessResponse {
+    constructor({message, data = {}, options = {}}) {
+        super({message, status: StatusCodes.CREATED, data, options})
+    }
 }
 
-// Export
+const CREATED = (res, message, data, options = {}) => {
+    new Create({
+        message,
+        data,
+        options
+    }).send(res)
+}
+
+const OK = (res, message, data, options = {}) => {
+    new Ok({
+        message,
+        data,
+        options
+    }).send(res)
+}
+
+
 module.exports = {
-  OK,
-  CREATED,
-  SuccessResponse,
-};
+    OK,
+    CREATED
+}

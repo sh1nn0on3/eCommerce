@@ -1,97 +1,131 @@
-"use strict";
+const {Schema, mongoose} = require("mongoose");
+const slugify = require('slugify')
 
-const { min } = require("lodash");
-const { Schema, model } = require("mongoose");
-const slugify = require("slugify");
-const DOCUMENT_NAME = "Product";
-const COLLECTION_NAME = "Products";
+const DOCUMENT_NAME = 'Product';
+const COLLECTION_NAME = 'Products';
+const COLLECTION_CLOTHING_NAME = 'Clothings';
+const COLLECTION_ELECTRON_NAME = 'Electrons';
+const COLLECTION_FURNITURE_NAME = 'Furnitures';
 
-const productSchema = new Schema(
-  {
-    product_name: { type: String, required: true },
-    product_thumb: { type: String, required: true },
-    product_description: { type: String, required: true },
+const productSchema = new mongoose.Schema({
+    product_name: {
+        type: String,
+        trim: true,
+        maxLength: 150
+    },
+    product_thumb: {
+        type: String,
+        unique: true,
+        trim: true
+    },
+    product_description: {
+        type: String,
+    },
     product_slug: String,
-    product_price: { type: Number, required: true },
-    product_quantity: { type: Number, required: true },
+    product_price: {
+        type: Number,
+        required: true
+    },
+    product_quality: {
+        type: Number,
+        required: true
+    },
     product_type: {
-      type: String,
-      required: true,
-      enum: ["Electronics", "Clothing", "Furniture"],
+        type: String,
+        required: true,
+        enum: ["Electronics", "Clothing", "Furniture"]
     },
-    product_shop: String,
-    product_attributes: { type: Schema.Types.Mixed, required: true },
-    product_ratingAverage: {
-      type: Number,
-      default: 4.5,
-      min: [1, "Rating must be above 1.0"],
-      max: [5, "Rating must be below 5.0"],
-      set: (val) => Math.round(val * 10) / 10,
+    product_shop: {
+        type: Schema.Types.ObjectId,
+        ref: 'Shop'
     },
-    product_variations: { type: Array, default: [] },
-    isDraft: { type: Boolean, default: true, index: true, select: false },
-    isPublished: { type: Boolean, default: false, index: true, select: false },
-  },
-  {
+    product_attributes: {
+        type: Schema.Types.Mixed,
+        required: true
+    },
+    // more
+    product_ratingsAverage: {
+        type: Number,
+        default: 4.5,
+        min: [1, 'Rating must be above 1.0'],
+        max: [5, 'Rating must be above 5.0'],
+        set: (val) => Math.round(val * 10) / 10
+    },
+    product_variations: {
+        type: Array,
+        default: [],
+    },
+    isDraft: {
+        type: Boolean,
+        default: true, // khong dk select ra
+        index: true,
+        select: false // khong lay field nay ra
+    },
+    isPublished: {
+        type: Boolean,
+        default: false, // khong dk select ra
+        index: true,
+        select: false // khong lay field nay ra
+    },
+}, {
     timestamps: true,
-    collection: COLLECTION_NAME,
-  }
-);
-// Create index for product_name
-productSchema.index({ product_name: "text", product_description: "text" });
-// Document middleware
-productSchema.pre("save", function (next) {
-  this.product_slug = slugify(this.product_name, { lower: true });
-  next();
+    collection: COLLECTION_NAME
 });
 
-// define the product type = Electronics
-const electronicSchema = new Schema(
-  {
-    manufacturer: { type: String, required: true },
-    model: { type: String, required: true },
-    color: { type: String, required: true },
-    product_shop: { type: Schema.Types.ObjectId, ref: "Shop" },
-  },
-  {
-    timestamps: true,
-    collection: "Electronics",
-  }
-);
+const electronicsSchema = new Schema({
+    manufacturer: { type: String, required: true},
+    model: String,
+    color: String,
+    product_shop: {
+        type: Schema.Types.ObjectId,
+        ref: 'Shop'
+    }
+}, {
+    collection: COLLECTION_ELECTRON_NAME,
+    timestamps: true
+})
 
-// define the product type = Clothing
-const clothingSchema = new Schema(
-  {
-    brand: { type: String, required: true },
-    size: { type: String, required: true },
-    color: { type: String, required: true },
-    material: { type: String, required: true },
-    product_shop: { type: Schema.Types.ObjectId, ref: "Shop" },
-  },
-  {
-    timestamps: true,
-    collection: "Clothes",
-  }
-);
+const clothingSchema = new Schema({
+    brand: { type: String, required: true},
+    size: String,
+    material: String,
+    product_shop: {
+        type: Schema.Types.ObjectId,
+        ref: 'Shop'
+    }
+}, {
+    collection: COLLECTION_CLOTHING_NAME,
+    timestamps: true
+})
 
-const furnitureSchema = new Schema(
-  {
-    manufacturer: { type: String, required: true },
-    model: { type: String, required: true },
-    color: { type: String, required: true },
-    product_shop: { type: Schema.Types.ObjectId, ref: "Shop" },
-  },
-  {
-    timestamps: true,
-    collection: "Furniture",
-  }
-);
+const furnitureSchema  = new Schema({
+    brand: { type: String, required: true},
+    size: String,
+    material: String,
+    product_shop: {
+        type: Schema.Types.ObjectId,
+        ref: 'Shop'
+    }
+}, {
+    collection: COLLECTION_FURNITURE_NAME,
+    timestamps: true
+})
 
-// define the product type = Furniture
+// create index for search
+productSchema.index({
+    product_name: 'text',
+    product_description: 'text'
+})
+
+// Document middleware runs before .save and .create...
+productSchema.pre('save', function (next) {
+    this.product_slug = slugify(this.product_name, {lower: true})
+    next()
+})
 
 module.exports = {
-  product: model(DOCUMENT_NAME, productSchema),
-  electronic: model("Electronic", electronicSchema),
-  clothing: model("Clothing", clothingSchema),
-  furniture: model("Furniture ::", furnitureSchema),
-};
+    product: mongoose.model(DOCUMENT_NAME, productSchema),
+    electronic: mongoose.model("Electronic", electronicsSchema),
+    clothing: mongoose.model("Clothing", clothingSchema),
+    furniture: mongoose.model("Furniture", furnitureSchema)
+}

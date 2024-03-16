@@ -1,23 +1,22 @@
-"use strict";
+const express = require('express')
+const {apiKey, permission} = require("../auth/checkAuth");
+const router = express.Router()
 
-const express = require("express");
-const { apiKey, checkPermissions } = require("../auth/checkAuth");
-const { asyncHandler } = require("../helpers/asyncHandler");
-const router = express.Router();
-const accessRoutes = require("./access");
-const productRoutes = require("./product");
+// health check application
+router.use('/healthcheck', require('./health'))
 
+// check apiKey
+router.use(apiKey)
 
+// check permission
+router.use(permission('0000'))
 
+// init routes
+router.use('/api/v1/cart', require('./cart'))
+router.use('/api/v1/order', require('./order'))
+router.use('/api/v1/discount', require('./discount'))
+router.use('/api/v1/product', require('./product'))
+router.use('/api/v1/comment', require('./comment'))
+router.use('/api/v1/auth', require('./auth'))
 
-// Check apiKey
-router.use(apiKey);
-// Check permissions
-router.use(checkPermissions("0000"));
-// Users
-// Access
-router.use("/api/v1", accessRoutes);
-// Products
-router.use("/api/v1/product", productRoutes);
-
-module.exports = router;
+module.exports = router
